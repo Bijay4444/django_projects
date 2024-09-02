@@ -1,0 +1,29 @@
+{% extends "base_menu.html" %}
+{% block content %}
+<h1>Ads</h1>
+<p>
+    {%if ad_list %}
+    <ul>
+        {% for ads in ad_list %}
+        <li>
+            <a href = "{% url 'myads:ad_detail' ads.id %}">{{ ads.title }}</a>
+            {% if ads.owner == user %}
+            (<a href="{% url 'myads:ad_update' ads.id %}">Edit</a> |
+            <a href="{% url 'myads:ad_delete' ads.id %}">Delete</a>)
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+        <p>There are no ads in the database</p>
+    {% endif %}
+</p>
+<p>
+    <a href="{% url 'myads:ad_create' %}">Add Ads</a>
+    {% if user.is_authenticated %}
+    <a href="{% url 'logout' %}?next={% url 'myads:all' %}">Logout</a>
+    {% else %}
+    <a href="{% url 'login' %}?next={% url 'myads:all' %}">Login</a>
+    {% endif %}
+</p>
+{% endblock %}
