@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .owner import OwnerCreateView, OwnerListView, OwnerDetailView, OwnerUpdateView, OwnerDeleteView
-from .models import Ad, Comment
+from .models import Ad, Comment, Fav
 from django.urls import reverse_lazy, reverse
 from django.http import HttpResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -8,9 +8,26 @@ from django.views import View
 
 from ads.forms import CreateForm, CommentForm
 
+#disableling csrfvalidation
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.db.utils import IntegrityError
+
 # Create your views here.
 class AdListView(OwnerListView):
     model = Ad
+    template_name= 'ads/ad_list.html'
+
+    def get(self, request):
+        ad_list = Ad.objects.all()
+        favourites = list()
+
+        if request.user.is_authenticated:
+            rows = request.user.favourite_ads.values('id')
+            favourites = [row['id'] for row in rows]
+
+        context = {'ad_list': ad_list, 'favourites': favourites}
+        return render(request, self.template_name, context)
 
 class AdDetailView(OwnerDetailView):
     model = Ad
@@ -84,6 +101,33 @@ class CommentDeleteView(OwnerDeleteView):
     def get_success_url(self):
         ad = self.object.ad
         return reverse('myads:ad_detail', args=[ad.id])
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AddFavouriteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        print("Add PK", pk)
+        t = get_object_or_404(Ad, id=pk)
+        fav = Fav(user=request.user, ad=t)
+
+        try:
+            fav.save()
+        except IntegrityError:
+            pass
+        return HttpResponse()
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DeleteFavouriteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        print("Delete PK", pk)
+        t = get_object_or_404(Ad, id=pk)
+
+        try:
+            Fav.objects.get(user=request.user, ad=t).delete()
+        except Fav.DoesNotExist:
+            pass
+
+        return HttpResponse()
+
 
 def stream_file(request, pk):
     pic = get_object_or_404(Ad, id=pk)
