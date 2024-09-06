@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.conf import settings
+from taggit.managers import TaggableManager
 
 # Create your models here.
 class Ad(models.Model):
@@ -10,6 +11,7 @@ class Ad(models.Model):
         )
     price = models.DecimalField(max_digits=7, decimal_places=2, null=True)
     text = models.TextField()
+    tags = TaggableManager()
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     favourites= models.ManyToManyField(settings.AUTH_USER_MODEL, through='fav', related_name='favourite_ads')
     picture = models.BinaryField(null=True, blank=True, editable=True)

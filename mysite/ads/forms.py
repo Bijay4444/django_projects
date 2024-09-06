@@ -11,7 +11,7 @@ class CreateForm(forms.ModelForm):
 
     class Meta:
         model = Ad
-        fields= ['title', 'text', 'price', 'picture']
+        fields= ['title', 'text', 'price','tags', 'picture']
 
     #validation for size
     def clean(self):
@@ -36,6 +36,7 @@ class CreateForm(forms.ModelForm):
 
         if commit:
             instance.save()
+            self.save_m2m()
 
         return instance
 
